@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 //BlockChainTestsTransition
 BOOST_FIXTURE_TEST_SUITE(BlockChainTestsTransition, transitionFixture)
+BOOST_AUTO_TEST_CASE(bcMetropolis) { dev::test::executeTests("bcMetropolis", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcSimpleTransition) { dev::test::executeTests("bcSimpleTransitionTest", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcTheDaoTest) { dev::test::executeTests("bcTheDaoTest", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(bcEIP150Test) { dev::test::executeTests("bcEIP150Test", "/BlockchainTests/TestNetwork", "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests); }
@@ -64,8 +65,18 @@ BOOST_AUTO_TEST_CASE(bcWalletTestEIP150)
 	if (test::Options::get().wallet)
 		dev::test::executeTests("bcWalletTest", "/BlockchainTests/EIP150", "/BlockchainTestsFiller/EIP150", dev::test::doBlockchainTests);
 }
+BOOST_AUTO_TEST_CASE(bcInvalidRLPTestEIP150)
+{
+	std::string fillersPath =  dev::test::getTestPath() +  "/src/BlockchainTestsFiller/EIP150";
+	if (!dev::test::Options::get().filltests)
+		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests/EIP150", "/BlockchainTestsFiller/EIP150", dev::test::doBlockchainTests);
+	else
+	{
+		dev::test::TestOutputHelper::initTest();
+		dev::test::copyFile(fillersPath + "/bcInvalidRLPTest.json", dev::test::getTestPath() + "/BlockchainTests/EIP150/bcInvalidRLPTest.json");
+	}
+}
 BOOST_AUTO_TEST_SUITE_END()
-
 
 //BlockChainTestsHomestead
 BOOST_FIXTURE_TEST_SUITE(BlockChainTestsHomestead, homesteadFixture)

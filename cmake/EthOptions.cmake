@@ -40,11 +40,6 @@ macro(configure_project)
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
 
-	# Temporary pre-processor symbol used for hiding broken unit-tests.
-	# Hiding them behind this pre-processor symbol lets us turn them off
-	# and on again easily enough, and also to grep for them.
-	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
 	# not suitable for all platforms.
@@ -56,6 +51,12 @@ macro(configure_project)
 	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
 		add_definitions(-DETH_FATDB)
+	endif ()
+
+	# ROCKSDB is an option to build Ethereum against Facebook's RocksDB instead
+	# of LevelDB
+	if (ROCKSDB)
+		add_definitions(-DETH_ROCKSDB)
 	endif ()
 
 	# TODO:  What does "paranoia" even mean?

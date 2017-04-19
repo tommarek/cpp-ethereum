@@ -20,6 +20,7 @@
  * Transaaction test functions.
  */
 
+#include <test/tools/libtesteth/BlockChainHelper.h>
 #include "test/tools/libtesteth/TestHelper.h"
 #include <libethcore/Exceptions.h>
 #include <libethcore/Common.h>
@@ -145,6 +146,51 @@ BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
 	BOOST_CHECK_MESSAGE(toTransactionException(stackEx) == TransactionException::StackUnderflow, "StackUnderflow !=> TransactionException");
 	Exception notEx;
 	BOOST_CHECK_MESSAGE(toTransactionException(notEx) == TransactionException::Unknown, "Unexpected should be TransactionException::Unknown");
+}
+
+BOOST_AUTO_TEST_CASE(blockVerifyZeroTransaction)
+{
+	TestBlockChain::s_sealEngineNetwork = eth::Network::MetropolisTest;
+	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
+	TestBlockChain bc(genesis);
+
+	TestTransaction tr = TestTransaction::defaultZeroTransaction();
+	TestBlock block;
+	block.addTransaction(tr);
+	block.mine(bc);
+	bc.addBlock(block);
+	BOOST_CHECK_MESSAGE(bc.interface().info().number() == 1, "Mining Block with zero transaction failed!");
+
+	//Transaction should be able to mine on METROPOLIS
+	//Not implemented yet
+	//BOOST_CHECK_MESSAGE(bc.interface().transactions().size() == 1, "Failed importing zero transaction to block!");
+}
+
+BOOST_AUTO_TEST_CASE(GettingSenderForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_CHECK(!tx.hasSignature());
+
+	BOOST_REQUIRE_THROW(tx.sender(), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(GettingSignatureForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_REQUIRE_THROW(tx.signature(), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(StreamRLPWithSignatureForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	RLPStream s;
+	BOOST_REQUIRE_THROW(tx.streamRLP(s, IncludeSignature::WithSignature, false), TransactionIsUnsigned);
+}
+
+BOOST_AUTO_TEST_CASE(CheckLowSForUnsignedTransactionThrows)
+{
+	Transaction tx(0, 0, 10000, Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b"), bytes(), 0);
+	BOOST_REQUIRE_THROW(tx.checkLowS(), TransactionIsUnsigned);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

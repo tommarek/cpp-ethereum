@@ -1012,7 +1012,7 @@ int main(int argc, char** argv)
 	if (testingMode)
 	{
 		chainParams.sealEngineName = "NoProof";
-		chainParams.otherParams["allowFutureBlocks"] = "1";
+		chainParams.otherParams["allowFutureBlocks"] = true;
 	}
 
 	dev::WebThreeDirect web3(
