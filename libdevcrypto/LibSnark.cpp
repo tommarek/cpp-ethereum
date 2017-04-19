@@ -39,14 +39,10 @@ namespace
 
 void initLibSnark()
 {
-	static bool initialized = 0;
-	if (!initialized)
-	{
-		// FIXME: This is race condition!!!
-		libff::alt_bn128_pp::init_public_params();
-		// Otherwise the library would output profiling info for each run.
-		initialized = true;
-	}
+	// This is hackish, but we really want to use `static` variable for lock
+	// free thread-safe initialization.
+	static bool initialized = (libff::alt_bn128_pp::init_public_params(), true);
+	(void)initialized;
 }
 
 libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
