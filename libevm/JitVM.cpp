@@ -3,6 +3,7 @@
 #include <libdevcore/Log.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
+#include <evmjit/include/evm.h>
 
 namespace dev
 {
@@ -131,12 +132,7 @@ void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
 	*o_hash = toEvmC(env.blockHash(_number));
 }
 
-int64_t call(
-	evm_env* _opaqueEnv,
-	evm_message const* _msg,
-	uint8_t* _outputData,
-	size_t _outputSize
-) noexcept
+void call(evm_result* o_result, evm_env* _opaqueEnv, evm_message const* _msg) noexcept
 {
 	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
@@ -145,7 +141,6 @@ int64_t call(
 
 	if (_msg->kind == EVM_CREATE)
 	{
-		assert(_outputSize == 20);
 		u256 gas = _msg->gas;
 		// ExtVM::create takes the sender address from .myAddress.
 		assert(fromEvmC(_msg->sender) == env.myAddress);
@@ -154,13 +149,24 @@ int64_t call(
 		//       the output is ignored here.
 		h160 addr;
 		std::tie(addr, std::ignore) = env.create(value, gas, input, {});
-		auto gasLeft = static_cast<int64_t>(gas);
+		o_result->gas_left = static_cast<int64_t>(gas);
+		o_result->release = nullptr;
 		if (addr)
-			std::copy(addr.begin(), addr.end(), _outputData);
+		{
+			o_result->code = EVM_SUCCESS;
+			auto& resultAddr = reinterpret_cast<evm_uint160be&>(o_result->reserved);
+			resultAddr = toEvmC(addr);
+			// Use the payload to store the address.
+			o_result->output_data = reinterpret_cast<byte*>(&resultAddr);
+			o_result->output_size = sizeof(resultAddr);
+		}
 		else
-			gasLeft |= EVM_CALL_FAILURE;
-
-		return gasLeft;
+		{
+			o_result->code = EVM_FAILURE;
+			o_result->output_data = nullptr;
+			o_result->output_size = 0;
+		}
+		return;
 	}
 
 	CallParameters params;
@@ -174,14 +180,27 @@ int64_t call(
 	params.onOp = {};
 
 	auto output = env.call(params);
-	auto gasLeft = static_cast<int64_t>(params.gas);
+	// FIXME: We have a mess here. It is hard to distinguish reverts from failures.
+	// In first case we want to keep the output, in the second one the output
+	// is optional and should not be passed to the contract, but can be useful
+	// for EVM in general.
+	o_result->code = output.first ? EVM_SUCCESS : EVM_REVERT;
+	o_result->gas_left = static_cast<int64_t>(params.gas);
 
-	output.second.copyTo({_outputData, _outputSize});
-	if (!output.first)
-		// Add failure indicator.
-		gasLeft |= EVM_CALL_FAILURE;
+	// Place a new vector of bytes containing output in result's reserved memory.
+	static_assert(sizeof(bytes) <= sizeof(o_result->reserved), "Vector is too big");
+	auto b = new(&o_result->reserved) bytes(output.second.begin(), output.second.end());
+	// Set the destructor to delete the vector.
+	o_result->release = [](evm_result const* _result)
+	{
+		auto& output = reinterpret_cast<bytes const&>(_result->reserved);
+		// Explicitly call vector's destructor to release its data.
+		// This is normal pattern when placement new operator is used.
+		output.~bytes();
+	};
 
-	return gasLeft;
+	o_result->output_size = b->size();
+	o_result->output_data = b->data();
 }
 
 
