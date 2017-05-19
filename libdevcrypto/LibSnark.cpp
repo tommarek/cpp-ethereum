@@ -144,6 +144,10 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 			if (-libff::alt_bn128_G2::scalar_field::one() * p + p != libff::alt_bn128_G2::zero())
 				// p is not an element of the group (has wrong order)
 				return {false, bytes()};
+			if (p.is_zero())
+				continue; // the pairing is one
+			if (decodePointG1(pair).is_zero())
+				continue; // the pairing is one
 			x = x * libff::alt_bn128_miller_loop(
 				libff::alt_bn128_precompute_G1(decodePointG1(pair)),
 				libff::alt_bn128_precompute_G2(p)
