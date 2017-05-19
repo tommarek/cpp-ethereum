@@ -144,19 +144,24 @@ ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 	return maxLength * maxLength * max<bigint>(expLength, 1) / 20;
 }
 
-ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
-{
-	return dev::crypto::alt_bn128_pairing_product(_in);
-}
-
 ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in)
 {
 	return dev::crypto::alt_bn128_G1_add(_in);
 }
+
 ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in)
 {
 	return dev::crypto::alt_bn128_G1_mul(_in);
 }
 
+ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in)
+{
+	return dev::crypto::alt_bn128_pairing_product(_in);
+}
+
+ETH_REGISTER_PRECOMPILED_PRICER(alt_bn128_pairing_product)(bytesConstRef _in)
+{
+	return 100000 + (_in.size() / 192) * 80000;
+}
 
 }
