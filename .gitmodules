@@ -4,5 +4,4 @@
 	branch = develop
 [submodule "test/tests"]
 	path = test/jsontests
-	url = https://github.com/pirapira/tests.git
-	branch = snark_test_filled
+	url = https://github.com/ethereum/tests.git
