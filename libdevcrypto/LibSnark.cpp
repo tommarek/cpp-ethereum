@@ -30,6 +30,8 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 
+#include <mutex>
+
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
@@ -37,12 +39,15 @@ using namespace dev::crypto;
 namespace
 {
 
+std::once_flag initLibSnarkFlag;
+
 void initLibSnark()
 {
-	// This is hackish, but we really want to use `static` variable for lock
-	// free thread-safe initialization.
-	static bool initialized = (libff::alt_bn128_pp::init_public_params(), true);
-	(void)initialized;
+	call_once(initLibSnarkFlag,
+		[](){
+			cnote << "calling libff::alt_bn128_pp::init_public_params().";
+			libff::alt_bn128_pp::init_public_params();
+		});
 }
 
 libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
