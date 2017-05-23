@@ -63,7 +63,7 @@ libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 
 h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _x)
 {
-	constexpr auto N = _x.N;
+	auto const N = _x.N;
 	constexpr auto L = sizeof(_x.data[0]);
 	h256 x;
 	for (unsigned i = 0; i < N; i++)
