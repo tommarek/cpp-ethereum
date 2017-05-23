@@ -59,7 +59,7 @@ libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 	return x;
 }
 
-h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> _x)
+h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _x)
 {
 	h256 x;
 	for (unsigned i = 0; i < 4; i++)
@@ -131,7 +131,7 @@ pair<bool, bytes> dev::crypto::alt_bn128_pairing_product(dev::bytesConstRef _in)
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
 	bool result = true;
-	size_t const pairSize = 2 * 32 + 2 * 64;
+	size_t constexpr pairSize = 2 * 32 + 2 * 64;
 	size_t const pairs = _in.size() / pairSize;
 	if (pairs * pairSize != _in.size())
 	{
@@ -180,8 +180,8 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_add(dev::bytesConstRef _in)
 	try
 	{
 		initLibSnark();
-		libff::alt_bn128_G1 p1 = decodePointG1(_in);
-		libff::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 2));
+		libff::alt_bn128_G1 const p1 = decodePointG1(_in);
+		libff::alt_bn128_G1 const p2 = decodePointG1(_in.cropped(32 * 2));
 
 		return {true, encodePointG1(p1 + p2)};
 	}
@@ -200,9 +200,9 @@ pair<bool, bytes> dev::crypto::alt_bn128_G1_mul(dev::bytesConstRef _in)
 	try
 	{
 		initLibSnark();
-		libff::alt_bn128_G1 p = decodePointG1(_in.cropped(0));
+		libff::alt_bn128_G1 const p = decodePointG1(_in.cropped(0));
 
-		libff::alt_bn128_G1 result = toLibsnarkBigint(h256(_in.cropped(64), h256::AlignLeft)) * p;
+		libff::alt_bn128_G1 const result = toLibsnarkBigint(h256(_in.cropped(64), h256::AlignLeft)) * p;
 
 		return {true, encodePointG1(result)};
 	}
