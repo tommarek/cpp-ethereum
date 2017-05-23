@@ -57,7 +57,7 @@ libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 	constexpr auto L = sizeof(x.data[0]);
 	for (unsigned i = 0; i < N; i++)
 		for (unsigned j = 0; j < L; j++)
-			x.data[N - 1 - i] |= uint64_t(_x[i * L + j]) << (8 * (L - 1 - j));
+			x.data[N - 1 - i] |= (mp_limb_t)(_x[i * L + j]) << (8 * (L - 1 - j));
 	return x;
 }
 
@@ -68,7 +68,7 @@ h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _x)
 	h256 x;
 	for (unsigned i = 0; i < N; i++)
 		for (unsigned j = 0; j < L; j++)
-			x[i * L + j] = uint8_t(uint64_t(_x.data[N - 1 - i]) >> (8 * (L - 1 - j)));
+			x[i * L + j] = uint8_t((mp_limb_t)(_x.data[N - 1 - i]) >> (8 * (L - 1 - j)));
 	return x;
 }
 
