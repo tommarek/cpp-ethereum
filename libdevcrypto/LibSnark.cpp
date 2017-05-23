@@ -53,18 +53,22 @@ void initLibSnark()
 libff::bigint<libff::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 {
 	libff::bigint<libff::alt_bn128_q_limbs> x;
-	for (unsigned i = 0; i < 4; i++)
-		for (unsigned j = 0; j < 8; j++)
-			x.data[3 - i] |= uint64_t(_x[i * 8 + j]) << (8 * (7 - j));
+	constexpr auto N = x.N;
+	constexpr auto L = sizeof(x.data[0]);
+	for (unsigned i = 0; i < N; i++)
+		for (unsigned j = 0; j < L; j++)
+			x.data[N - 1 - i] |= uint64_t(_x[i * L + j]) << (8 * (L - 1 - j));
 	return x;
 }
 
 h256 fromLibsnarkBigint(libff::bigint<libff::alt_bn128_q_limbs> const& _x)
 {
+	constexpr auto N = _x.N;
+	constexpr auto L = sizeof(_x.data[0]);
 	h256 x;
-	for (unsigned i = 0; i < 4; i++)
-		for (unsigned j = 0; j < 8; j++)
-			x[i * 8 + j] = uint8_t(uint64_t(_x.data[3 - i]) >> (8 * (7 - j)));
+	for (unsigned i = 0; i < N; i++)
+		for (unsigned j = 0; j < L; j++)
+			x[i * L + j] = uint8_t(uint64_t(_x.data[N - 1 - i]) >> (8 * (L - 1 - j)));
 	return x;
 }
 
