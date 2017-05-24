@@ -24,6 +24,7 @@
 #include <algebra/curves/alt_bn128/alt_bn128_g2.hpp>
 #include <algebra/curves/alt_bn128/alt_bn128_pairing.hpp>
 #include <algebra/curves/alt_bn128/alt_bn128_pp.hpp>
+#include <common/profiling.hpp>
 
 #include <libdevcrypto/Exceptions.h>
 
@@ -45,7 +46,9 @@ void initLibSnark()
 {
 	call_once(initLibSnarkFlag,
 		[](){
-			cnote << "calling libff::alt_bn128_pp::init_public_params().";
+			cnote << "initializing libsnark.";
+			libff::inhibit_profiling_info = true;
+			libff::inhibit_profiling_counters = true;
 			libff::alt_bn128_pp::init_public_params();
 		});
 }
