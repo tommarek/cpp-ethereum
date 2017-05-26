@@ -132,15 +132,31 @@ ETH_REGISTER_PRECOMPILED(modexp)(bytesConstRef _in)
 	return {true, ret};
 }
 
+namespace
+{
+	bigint expLengthAdjust(size_t _baseLength, size_t _expLength, bytesConstRef _in)
+	{
+		size_t const numConsideredBytes { min(_expLength, size_t(32)) };
+		bigint const expConsideredBytes { parseBigEndianRightPadded(_in, 96 + _baseLength, numConsideredBytes) };
+		size_t position = 0;
+		if (!expConsideredBytes.is_zero())
+			position = msb(expFirstWord);
+		assert(_expLength >= numConsideredBytes);
+		assert(position < 256);
+		return 8 * (_expLength - numConsideredBytes) + position;
+	}
+}
+
 ETH_REGISTER_PRECOMPILED_PRICER(modexp)(bytesConstRef _in)
 {
-	bigint const baseLength(parseBigEndianRightPadded(_in, 0, 32));
-	bigint const expLength(parseBigEndianRightPadded(_in, 32, 32));
-	bigint const modLength(parseBigEndianRightPadded(_in, 64, 32));
+	size_t const baseLength { parseBigEndianRightPadded(_in, 0, 32) };
+	size_t const expLength { parseBigEndianRightPadded(_in, 32, 32) };
+	bigint const modLength { parseBigEndianRightPadded(_in, 64, 32) };
 
-	bigint const maxLength = max(modLength, baseLength);
+	bigint const maxLength { max(modLength, bigint(baseLength)) };
+	bigint const adjustedExpLength { expLengthAdjust(baseLength, expLength, _in) };
 
-	return maxLength * maxLength * max<bigint>(expLength, 1) / 20;
+	return maxLength * maxLength * max<bigint>(adjustedExpLength, 1) / 100;
 }
 
 }
